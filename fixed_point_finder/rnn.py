@@ -29,6 +29,8 @@ import numpy as onp  # original CPU-backed NumPy
 
 import fixed_point_finder.utils as utils
 
+from pdb import set_trace as b
+
 MAX_SEED_INT = 10000000
 
 
@@ -40,7 +42,7 @@ def gru_params(key, **rnn_hps):
     n: hidden state size
     u: input size
     i_factor: scaling factor for input weights
-    h_factor: scaling factor for hidden -> hidden weights
+    h_factor: scaling factor for hidden -> hidden weights 
     h_scale: scale on h0 initial condition
 
   Returns:
@@ -82,7 +84,7 @@ def sigmoid(x):
   return 0.5 * (np.tanh(x / 2.) + 1)
 
 
-def gru(params, h, x, bfg=0.5):
+def gru_jax(params, h, x, bfg=0.5):
   """Implement the GRU equations.
 
   Arguments:
@@ -104,6 +106,32 @@ def gru(params, h, x, bfg=0.5):
   c = np.tanh(np.dot(params['wCHX'], rhx) + params['bC'])
   return u * h + (1.0 - u) * c
 
+
+
+def gru_pytorch(params, h, x, bfg=0.5):
+  """Implement the GRU equations.
+
+  Arguments:
+    params: dictionary of GRU parameters
+    h: np array of  hidden state
+    x: np array of input
+    bfg: bias on forget gate (useful for learning if > 0.0)
+
+  Returns:
+    np array of hidden state after GRU update"""
+
+  W_ir, W_iz, W_in = np.split(params['weight_ih_l0'], 3)
+  W_hr, W_hz, W_hn = np.split(params['weight_hh_l0'], 3)
+  b_ir, b_iz, b_in = np.split(params['bias_ih_l0'], 3)
+  b_hr, b_hz, b_hn = np.split(params['bias_hh_l0'], 3)
+  b()
+  r = sigmoid(np.dot(W_ir, x) + b_ir + np.dot(W_hr, h) + b_hr)
+  z = sigmoid(np.dot(W_iz, x) + b_iz + np.dot(W_hz, h) + b_hz)
+  n = np.tanh(np.dot(W_in, x) + b_in + r * (np.dot(W_hn, h) + b_hn))
+  h_new = (1.0 - z) * n + z * h
+
+  return h_new
+  
 
 def gru_scan(params, h, x, bfg=0.5):
   """Return the output twice for scan."""
