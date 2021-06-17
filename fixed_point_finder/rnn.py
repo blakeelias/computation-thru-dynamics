@@ -84,7 +84,7 @@ def sigmoid(x):
   return 0.5 * (np.tanh(x / 2.) + 1)
 
 
-def gru_jax(params, h, x, bfg=0.5):
+def gru(params, h, x, bfg=0.5):
   """Implement the GRU equations.
 
   Arguments:
@@ -124,7 +124,6 @@ def gru_pytorch(params, h, x, bfg=0.5):
   W_hr, W_hz, W_hn = np.split(params['weight_hh_l0'], 3)
   b_ir, b_iz, b_in = np.split(params['bias_ih_l0'], 3)
   b_hr, b_hz, b_hn = np.split(params['bias_hh_l0'], 3)
-  b()
   r = sigmoid(np.dot(W_ir, x) + b_ir + np.dot(W_hr, h) + b_hr)
   z = sigmoid(np.dot(W_iz, x) + b_iz + np.dot(W_hz, h) + b_hz)
   n = np.tanh(np.dot(W_in, x) + b_in + r * (np.dot(W_hn, h) + b_hn))
