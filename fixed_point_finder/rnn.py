@@ -171,6 +171,23 @@ def gru_run_with_h0(params, x_t, h0):
   return h_t, o_t  
 
 
+def gru_run_with_h0_pytorch(params, x_t, h0):
+  """Run the Vanilla RNN T steps, where T is shape[0] of input.
+
+  Args:
+    params: dict of GRU parameters
+    x_t: np array of inputs with dim ntime x u
+    h0: initial condition for hidden state
+
+  Returns: 
+    2-tuple of np arrays (hidden states w dim ntime x n, outputs w dim ntim x o)
+  """
+
+  f = partial(gru_scan, params)
+  _, h_t = lax.scan(f, h0, x_t)
+  return h_t, h_t[-1]
+
+
 def gru_run(params, x_t):
   """Run the Vanilla RNN T steps, where T is shape[0] of input.
   
@@ -187,7 +204,8 @@ def gru_run(params, x_t):
 # Let's make it handle batches using `vmap`
 batched_rnn_run = vmap(gru_run, in_axes=(None, 0))
 batched_rnn_run_w_h0 = vmap(gru_run_with_h0, in_axes=(None, 0, 0))
-  
+
+batched_rnn_run_w_h0_pytorch = vmap(gru_run_with_h0_pytorch, in_axes=(None, 0, 0))
   
 def loss(params, inputs_bxtxu, targets_bxtxo, targets_mask_t, l2reg):
   """Compute the least squares loss of the output, plus L2 regularization.
