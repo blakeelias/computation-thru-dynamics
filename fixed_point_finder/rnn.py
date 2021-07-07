@@ -137,6 +137,11 @@ def gru_scan(params, h, x, bfg=0.5):
   h = gru(params, h, x, bfg)
   return h, h
 
+def gru_scan_pytorch(params, h, x, bfg=0.5):
+  """Return the output twice for scan."""
+  h = gru_pytorch(params, h, x, bfg)
+  return h, h
+
 
 def affine(params, x):
   """Implement y = w x + b
@@ -183,7 +188,7 @@ def gru_run_with_h0_pytorch(params, x_t, h0):
     2-tuple of np arrays (hidden states w dim ntime x n, outputs w dim ntim x o)
   """
 
-  f = partial(gru_scan, params)
+  f = partial(gru_scan_pytorch, params)
   _, h_t = lax.scan(f, h0, x_t)
   return h_t, h_t[-1]
 
@@ -205,6 +210,7 @@ def gru_run(params, x_t):
 batched_rnn_run = vmap(gru_run, in_axes=(None, 0))
 batched_rnn_run_w_h0 = vmap(gru_run_with_h0, in_axes=(None, 0, 0))
 
+# batched_rnn_run_pytorch = vmap(gru_run_pytorch, in_axes=(None, 0))
 batched_rnn_run_w_h0_pytorch = vmap(gru_run_with_h0_pytorch, in_axes=(None, 0, 0))
   
 def loss(params, inputs_bxtxu, targets_bxtxo, targets_mask_t, l2reg):
