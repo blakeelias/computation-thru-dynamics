@@ -384,10 +384,12 @@ def plot_examples(ntimesteps, rnn_internals, nexamples=1):
     plt.xlim([0, ntimesteps])
     if bidx == 0:
       plt.ylabel('Hidden Units')
-      
+  
   for bidx in range(nexamples):
+    print('bidx: ', bidx)
+    print('nexamples: ', nexamples)
     plt.subplot(3, nexamples, 2*nexamples+bidx+1)
-    plt.plot(rnn_internals['outputs'][bidx,:,:], 'r')
+    # plt.plot(rnn_internals['outputs'][bidx,:,:], 'r')  # what's happening with output dimension?
     plt.plot(rnn_internals['targets'][bidx,:,:], 'k')    
     plt.xlim([0, ntimesteps])
     plt.xlabel('Timesteps')
