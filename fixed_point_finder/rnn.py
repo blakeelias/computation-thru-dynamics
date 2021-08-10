@@ -143,6 +143,12 @@ def gru_scan_pytorch(params, h, x, bfg=0.5):
   return h, h
 
 
+def gru_generator_scan(generator_params, h, x, bfg=0.5):
+  """Return the output twice for scan."""
+  h = gru_generator(generator_params, h, x, bfg=0.5):
+  return h, h
+
+
 def affine(params, x):
   """Implement y = w x + b
 
@@ -395,3 +401,44 @@ def plot_examples(ntimesteps, rnn_internals, nexamples=1):
     plt.xlabel('Timesteps')
     if bidx == 0:
       plt.ylabel('Output')
+
+
+def gru_generator(rnn_params, generator_params, base_emb, inputs):
+  """
+        Inputs:
+            base_emb: base embedding of shape [base_emb_dim]
+            inputs: tensor of shape [seq_len, batch, input_size] containing inputs to the RNN, or a PackedSequence
+              representing a batch of uneven lengths
+        Outputs:
+            outputs: RNN output sequence of shape [seq_len, batch, output_size]
+            hidden_states: RNN hidden state sequence of shape [seq_len, batch, hidden_dim]
+  """
+
+  input_module = nn.Embedding(
+            len(text_field.vocab), input_emb_dim, padding_idx=text_field.vocab.stoi[text_field.pad_token])
+
+  output_module = nn.Linear(hidden_dim, 1)
+
+  generator = clustering.Generator(
+            hidden_dim, base_emb_dim, input_emb_dim, input_module, output_module,
+            generator_rnn_cls, output_type='single')
+
+  
+  if isinstance(inputs, torch.nn.utils.rnn.PackedSequence):
+    input_emb = torch.nn.utils.rnn.PackedSequence(self.input_module(inputs.data), inputs.batch_sizes)
+    base_emb = base_emb.view([1] * inputs.data.dim() + [-1]).expand(*inputs.data.shape, -1)
+    z = torch.nn.utils.rnn.PackedSequence(torch.cat([input_emb.data, base_emb], -1), inputs.batch_sizes)
+  else:
+    input_emb = self.input_module(inputs)
+    base_emb = base_emb.view(1, 1, -1).expand(*input_emb.shape[:2], -1)  # replicate across every time step
+    z = torch.cat([base_emb, input_emb], -1)
+
+  hidden = None
+  hidden_states, hidden_final = gru_pytorch(rnn_params, hidden, z)
+  # hidden_states, hidden_final = self.rnn(z)
+
+  if self.output_type == 'single':
+    outputs = self.output_module(hidden_final.squeeze(0))
+  elif self.output_type == 'sequence':
+    outputs = self.output_module(hidden_states)
+  return outputs, hidden_states
