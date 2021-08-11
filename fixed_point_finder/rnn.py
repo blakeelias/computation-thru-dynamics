@@ -145,7 +145,7 @@ def gru_scan_pytorch(params, h, x, bfg=0.5):
 
 def gru_generator_scan(generator_params, h, x, bfg=0.5):
   """Return the output twice for scan."""
-  h = gru_generator(generator_params, h, x, bfg=0.5):
+  h = gru_generator(generator_params, h, x, bfg=0.5)
   return h, h
 
 
